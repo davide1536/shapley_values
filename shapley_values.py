@@ -1,7 +1,56 @@
+import enum
 import numpy as np
 from shapley import PermutationSampler
-from ensambler import retrieve_weights
+from ensamble import retrieve_weights, get_ensamble
+from sklearn.model_selection import cross_val_predict,train_test_split
+from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import AdaBoostClassifier
+from collections import defaultdict
+from sklearn import metrics
+from sklearn.ensemble import VotingClassifier
+import matplotlib.pyplot as plt
 
+# def preprocessing(clf, avg_shap):
+#     tot_lista = []
+#     explored = []
+#     for i, est in enumerate(clf.estimators_):
+def target(mean_prediction):
+    for i in range(len(mean_prediction)):
+        if mean_prediction[i]>=0.5:
+            mean_prediction[i] = 1
+        else:
+            mean_prediction[i] = 0
+    return mean_prediction
+
+def building_ensamble(trees, x_test, y_test):
+    print("building")
+    scores = []
+    for i in range(1, len(trees)):
+        mean_proba = np.zeros(len(x_test))
+        proba = np.zeros(len(x_test))
+        for j in range(i):
+            predicted_proba = trees[j].predict(x_test)
+            proba =proba + predicted_proba
+        mean = proba/i
+        prediction = target(mean)
+        print("score: ", metrics.accuracy_score(y_test, prediction))
+        scores.append(metrics.accuracy_score(y_test, prediction))
+    return scores
+
+def get_trees(dictionary, sort_shap):
+    lista = []
+    for shap in sort_shap:
+        lista.append(dictionary[shap][0])
+    return lista
+
+def build_dictionary(clf, avg_shap):
+    #preprocessing(clf, avg_shap)
+    print("funzione")
+    dictionary = defaultdict(list)
+    
+    for i, estimator in enumerate(clf.estimators_):
+        dictionary[avg_shap[i]].append(estimator)
+    return dictionary
 # W = np.array([[0.99, 0.01, 0.29843549, 0.15379455, 0.51862131, 0.34891333,
 #   0.1075523  ,0.77481699 ,0.27726541 ,0.88820124 ,0.43517843 ,0.49584311,
 #   0.97304657 ,0.54722007 ,0.87338943 ,0.37438674 ,0.15430086 ,0.90116497,
@@ -15,9 +64,10 @@ from ensambler import retrieve_weights
 #   0.30734203 ,0.64452474 ,0.56254204 ,0.65260114 ,0.63892126 ,0.13173215,
 #   0.41435691 ,0.41736315 ,0.13721167 ,0.46936669]])
 
-
-weights = retrieve_weights()
-W = np.array([weights[0]])
+X_train, y_train, X_test, y_test, clf = get_ensamble()
+x_test, shap_x, y_test, shap_y = train_test_split(X_test,y_test, test_size=0.5, random_state=42)
+weights = retrieve_weights(shap_x, shap_y, clf)
+W = np.array(weights)
 W = W/W.sum()
 # print("size:",W.shape)
 # print("sommatoria:", W.sum())
@@ -29,4 +79,23 @@ solver.solve_game(W,q)
 shapley_values = solver.get_solution()
 # avg_shapley = solver.get_average_shapley()
 # print(avg_shapley)
-print("shapley values:", shapley_values)
+
+#print("shapley values ordinati:", np.sort(shapley_values,axis=1))
+avg_shapley = solver.get_average_shapley()
+dictionary = build_dictionary(clf, avg_shapley)
+sort_avg_shapley = np.sort(avg_shapley)[::-1]
+print(sort_avg_shapley)
+trees = get_trees(dictionary, sort_avg_shapley)
+scores = building_ensamble(trees, x_test, y_test)
+plt.plot(scores)
+plt.ylabel("accuracy")
+plt.xlabel("n ensamble")
+ax = plt.gca()
+plt.show()
+
+
+
+
+
+
+
