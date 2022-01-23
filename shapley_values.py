@@ -1,7 +1,8 @@
 import enum
+from cv2 import solve
 import numpy as np
 from shapley import PermutationSampler
-from ensamble import retrieve_weights, get_ensamble
+from ensamble import retrieve_weights, get_ensamble, ensamble_neural_network
 from sklearn.model_selection import cross_val_predict,train_test_split
 from sklearn.datasets import load_breast_cancer
 from sklearn.ensemble import AdaBoostClassifier
@@ -14,6 +15,22 @@ import matplotlib.pyplot as plt
 #     tot_lista = []
 #     explored = []
 #     for i, est in enumerate(clf.estimators_):
+def compute_shap(weights):
+    W = np.array(weights)
+    #W_noise = np.array(weights_noise)
+
+    W = W/W.sum()
+    #W_noise = W_noise/W_noise.sum()
+    # print("size:",W.shape)
+    # print("sommatoria:", W.sum())
+    q = 0.5
+    solver = PermutationSampler()
+
+    print("quote ", q)
+    solver.solve_game(W,q)
+    shapley_values = solver.get_solution()
+    return shapley_values, solver
+
 def target(mean_prediction):
     for i in range(len(mean_prediction)):
         if mean_prediction[i]>=0.5:
@@ -43,6 +60,13 @@ def get_trees(dictionary, sort_shap):
         lista.append(dictionary[shap][0])
     return lista
 
+def build_dictionaryNN (clf, avg_shap):
+
+    dictionary = defaultdict(list)
+    for i, estimator in enumerate(clf.estimators_):
+        dictionary[len(estimator.coefs_[1])].append(avg_shap[i])
+    return dictionary
+
 def build_dictionary(clf, avg_shap):
     #preprocessing(clf, avg_shap)
     print("funzione")
@@ -66,25 +90,16 @@ def build_dictionary(clf, avg_shap):
 
 X_train, y_train, X_test, y_test, clf = get_ensamble()
 x_test, shap_x, y_test, shap_y = train_test_split(X_test,y_test, test_size=0.5, random_state=42)
-weights = retrieve_weights(shap_x, shap_y, clf)
-W = np.array(weights)
-W = W/W.sum()
-# print("size:",W.shape)
-# print("sommatoria:", W.sum())
-q = 0.5
-solver = PermutationSampler()
+weights= retrieve_weights(shap_x, shap_y, clf)
 
-print("quote ", q)
-solver.solve_game(W,q)
-shapley_values = solver.get_solution()
-# avg_shapley = solver.get_average_shapley()
-# print(avg_shapley)
-
-#print("shapley values ordinati:", np.sort(shapley_values,axis=1))
+shapley, solver = compute_shap(weights)
 avg_shapley = solver.get_average_shapley()
 dictionary = build_dictionary(clf, avg_shapley)
 sort_avg_shapley = np.sort(avg_shapley)[::-1]
 print(sort_avg_shapley)
+plt.plot(sort_avg_shapley)
+plt.show()
+
 trees = get_trees(dictionary, sort_avg_shapley)
 scores = building_ensamble(trees, x_test, y_test)
 plt.plot(scores)
@@ -92,6 +107,36 @@ plt.ylabel("accuracy")
 plt.xlabel("n ensamble")
 ax = plt.gca()
 plt.show()
+
+#neural network complexity
+X_train, y_train, X_test, y_test, clf = ensamble_neural_network()
+weights = retrieve_weights(x_test, y_test, clf)
+shapley, solver = compute_shap(weights)
+avg_shapley = solver.get_average_shapley()
+sort_avg_shapley = np.sort(avg_shapley)[::-1]
+dictionary = build_dictionaryNN(clf, avg_shapley)
+labels, data = dictionary.keys(), dictionary.values()
+plt.boxplot(data)
+plt.xticks(range(1, len(labels) + 1), labels)
+plt.show()
+
+# solver.solve_game(W_noise, q)
+# shapley_values_noise = solver.get_solution()
+# avg_shapley_noise = solver.get_average_shapley()
+# sort_avg_shapley_noise = np.sort(avg_shapley_noise)[::-1]
+
+# plt.plot(sort_avg_shapley_noise)
+
+
+# avg_shapley = solver.get_average_shapley()
+# print(avg_shapley)
+
+#print("shapley values ordinati:", np.sort(shapley_values,axis=1))
+
+
+
+# 
+
 
 
 
