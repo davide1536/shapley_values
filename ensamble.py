@@ -13,9 +13,9 @@ from titanic import get_titanic_data
 from sklearn.linear_model import Perceptron
 def retrieve_neural_network():
     clfs = []
-    n_nodes = [4,8,16]
+    n_nodes = [1 , 2, 128]
     #n_nodes = [1, 4, 9]
-    for i in range(0,1000):
+    for i in range(0,500):
         clf = MLPClassifier(hidden_layer_sizes=(n_nodes[random.randint(0,len(n_nodes)-1)],),max_iter=500)
         clfs.append((str(i),clf))
     return clfs
@@ -42,7 +42,7 @@ def get_ensamble():
     clf.fit(X_train, y_train)
     return X_train, y_train, X_test, y_test, clf
 
-def retrieve_weights(X_test, y_test, clf):
+def retrieve_weights(X_test, y_test, clf, type_task):
    
 
     #for each data point retrieve the individual weight of each classifier
@@ -56,7 +56,14 @@ def retrieve_weights(X_test, y_test, clf):
     for estimator in clf.estimators_:
         #noise = np.random.normal(0,1)
         #proba_noise = (0.3* estimator.predict_proba(X_test) + 0.7*noise)
+       
         proba = estimator.predict_proba(X_test)
+        if type_task == 'neural':
+            # print("estimator:", len(estimator.coefs_[1]).bit_length() -1)
+            # print("proba: ",proba)
+            print("classi:",estimator.classes_)
+        
+            #print( str(len(estimator.coefs_[1]).bit_length() -1) + ":" + str(proba[0:20]))
         total_proba.append(proba)
         #total_proba_noise.append(proba_noise)
         print(estimator)
@@ -69,7 +76,14 @@ def retrieve_weights(X_test, y_test, clf):
         #weights_noise = []
         for estimator in range(len(total_proba)):
             #weights_noise.append(total_proba_noise[estimator][i][y_test[i]]/len(total_proba[0]))
-            weights.append(total_proba[estimator][i][y_test[i]]/len(total_proba[0]))
+            # if type_task == 'neural':
+            #     print("estimator:", len(clf.estimators_[estimator].coefs_[1]).bit_length() -1)
+            #     print(total_proba[estimator][i][y_test[i]])
+            if (y_test[i] == 0):
+                weights.append(total_proba[estimator][i][0]/len(total_proba))
+            else:
+                weights.append(total_proba[estimator][i][1]/len(total_proba))
+
         total_weights.append(weights)
         #total_weights_noise.append(weights_noise)
 

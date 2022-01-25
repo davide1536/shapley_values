@@ -12,7 +12,7 @@ def get_titanic_data(mode, task):
 
     print(directory)
     df = pd.read_csv(directory)
-    cols = ['Name', 'Ticket', 'Cabin', 'PassengerId']
+    cols = ['Name', 'Ticket', 'Cabin']
     df = df.drop(cols, axis=1)
 
     dummies = []
@@ -33,7 +33,7 @@ def get_titanic_data(mode, task):
     train, test = train_test_split(df, test_size=0.3, random_state=0)
     train.columns = train.columns.astype(str)
     test.columns = test.columns.astype(str)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=0)
     if (task == 'ensamble'):
         return X_train, X_test, y_train, y_test
     else: 

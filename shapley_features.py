@@ -8,6 +8,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import cross_val_predict,train_test_split
 from sklearn import metrics
 from titanic import get_titanic_data
+from ensamble import get_ensamble
 
 
 # a classic housing price dataset
@@ -43,6 +44,7 @@ from titanic import get_titanic_data
 # print("y_train ", y_train.shape)
 # print("X_test ", X_test.shape)
 # print("y_test ", y_test.shape)
+X_train, y_train, X_test, y_test, clf = get_ensamble()
 X_train, X_test, y_train, y_test, train, test = get_titanic_data('train', 'features')
 
 # print("X:", X)
@@ -51,7 +53,7 @@ X_train, X_test, y_train, y_test, train, test = get_titanic_data('train', 'featu
 # # a simple linear model
 #model = sklearn.linear_model.LinearRegression()
 # y = train.iloc
-model = SVC()
+model = clf
 model.fit(X_train, y_train)
 prediction = model.predict(X_test)
 print("Accuracy:",metrics.accuracy_score(y_test, prediction))

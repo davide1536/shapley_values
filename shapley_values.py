@@ -1,3 +1,4 @@
+from cProfile import label
 import enum
 from cv2 import solve
 import numpy as np
@@ -39,14 +40,14 @@ def target(mean_prediction):
             mean_prediction[i] = 0
     return mean_prediction
 
-def building_ensamble(trees, x_test, y_test):
+def building_ensamble(trees, X_test, y_test):
     print("building")
     scores = []
     for i in range(1, len(trees)):
-        mean_proba = np.zeros(len(x_test))
-        proba = np.zeros(len(x_test))
+        mean_proba = np.zeros(len(X_test))
+        proba = np.zeros(len(X_test))
         for j in range(i):
-            predicted_proba = trees[j].predict(x_test)
+            predicted_proba = trees[j].predict(X_test)
             proba =proba + predicted_proba
         mean = proba/i
         prediction = target(mean)
@@ -64,7 +65,7 @@ def build_dictionaryNN (clf, avg_shap):
 
     dictionary = defaultdict(list)
     for i, estimator in enumerate(clf.estimators_):
-        dictionary[len(estimator.coefs_[1])].append(avg_shap[i])
+        dictionary[len(estimator.coefs_[1]).bit_length() -1 ].append(avg_shap[i])
     return dictionary
 
 def build_dictionary(clf, avg_shap):
@@ -89,9 +90,12 @@ def build_dictionary(clf, avg_shap):
 #   0.41435691 ,0.41736315 ,0.13721167 ,0.46936669]])
 
 X_train, y_train, X_test, y_test, clf = get_ensamble()
-x_test, shap_x, y_test, shap_y = train_test_split(X_test,y_test, test_size=0.5, random_state=42)
-weights= retrieve_weights(shap_x, shap_y, clf)
-
+X_test, shap_x, y_test, shap_y = train_test_split(X_test,y_test, test_size=0.5, random_state=42)
+weights= retrieve_weights(shap_x, shap_y, clf, 'jhjhj')
+# print("lunghezza test",len(shap_x))
+# print("lunghezza ensamble",len(clf.estimators_))
+# print("weight 0 ", len(weights))
+# print("weight 1 ",len(weights[1]))
 shapley, solver = compute_shap(weights)
 avg_shapley = solver.get_average_shapley()
 dictionary = build_dictionary(clf, avg_shapley)
@@ -101,7 +105,7 @@ plt.plot(sort_avg_shapley)
 plt.show()
 
 trees = get_trees(dictionary, sort_avg_shapley)
-scores = building_ensamble(trees, x_test, y_test)
+scores = building_ensamble(trees, X_test, y_test)
 plt.plot(scores)
 plt.ylabel("accuracy")
 plt.xlabel("n ensamble")
@@ -110,13 +114,18 @@ plt.show()
 
 #neural network complexity
 X_train, y_train, X_test, y_test, clf = ensamble_neural_network()
-weights = retrieve_weights(x_test, y_test, clf)
+weights = retrieve_weights(X_test, y_test, clf, 'neural')
+print("lunghezza test",len(X_test))
+print("lunghezza ensamble",len(clf.estimators_))
+print("weight 0 ", len(weights))
+print("weight 1 ",len(weights[1]))
 shapley, solver = compute_shap(weights)
 avg_shapley = solver.get_average_shapley()
-sort_avg_shapley = np.sort(avg_shapley)[::-1]
 dictionary = build_dictionaryNN(clf, avg_shapley)
 labels, data = dictionary.keys(), dictionary.values()
+
 plt.boxplot(data)
+
 plt.xticks(range(1, len(labels) + 1), labels)
 plt.show()
 
