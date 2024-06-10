@@ -75,7 +75,7 @@ def build_dictionary(clf, avg_shap):
     return dictionary
 
 
-def displayModelInformation(avg_shapley, clf):
+def buildOptimalEnsamble(avg_shapley, clf):
     dictionary = build_dictionary(clf, avg_shapley)
     sort_avg_shapley = np.sort(avg_shapley)[::-1]
     plt.plot(sort_avg_shapley)
@@ -110,8 +110,8 @@ weights= retrieve_weights(shap_x, shap_y, clf, 'random_forest')
 shapley, solver = compute_shap(weights)
 avg_shapley = solver.get_average_shapley()
 
-#For each ensamble model display its shapley value and its performance
-displayModelInformation(avg_shapley, clf, X_test, y_test)
+#Build an optimal ensamble, by taking in consideration the individual models with the highest shapley values
+buildOptimalEnsamble(avg_shapley, clf, X_test, y_test)
 
 #neural network complexity
 X_train, y_train, X_test, y_test, clf = ensamble_neural_network()
