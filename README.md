@@ -16,6 +16,12 @@ The main goals in this project are:
 # Implementation
 This project is based on the work proposed by A [Rozemberczki and Sarkar(2021)](https://arxiv.org/abs/2101.02153) and [Haneen Alsuradi]([http://example.com "Title"](http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf)).
 # Results
-![Alt](/results/waterfall.png)
-## Metrics obtained
+![Alt](/results/waterfall_ensamble.png)
+Waterfall graph that represents how different features "move" the prediction for a specific prediction x_i, from the expected value of all the prediction in the dataset.In red we have those features that increase the probability to survive, in blue those features that decrease the chance to survive.
+![Alt](/results/ensamble_building3.png)
+We have performed the ensemble building operation by constructing M' in a forward fashion, starting from the original ensemble M. In such operation we have used the shapley values as  metric to select this high performance subset.
+
+As we can see in the above figure, the ensemble score tends to increase up to a certain number of sub-trees (80) and then it decreases. This is due to the fact that in the tail of the list $T$ we have trees with low shapley values and so they haven't got importance in the classification process or, they can misclassify some samples.
+
 # Conclusion
+the computation of the shapley values are useful in many different ways: starting from the mere interpretability of a machine learning model to the enhancing of its performance (ensemble building, feature analysis).
