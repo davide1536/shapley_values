@@ -48,3 +48,9 @@ Thumbs.db
 *.mov
 *.wmv
 
+#titanic data
+/titanic
+
+#result images
+/result
+

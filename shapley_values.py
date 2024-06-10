@@ -12,18 +12,17 @@ from sklearn import metrics
 from sklearn.ensemble import VotingClassifier
 import matplotlib.pyplot as plt
 
-# def preprocessing(clf, avg_shap):
-#     tot_lista = []
-#     explored = []
-#     for i, est in enumerate(clf.estimators_):
+
+'''
+In this class I compute the actual shapley values for ensamble models. I also used methods to generate experimental graphs.
+
+'''
+
 def compute_shap(weights):
     W = np.array(weights)
-    #W_noise = np.array(weights_noise)
+    
 
     W = W/W.sum()
-    #W_noise = W_noise/W_noise.sum()
-    # print("size:",W.shape)
-    # print("sommatoria:", W.sum())
     q = 0.5
     solver = PermutationSampler()
 
@@ -69,13 +68,26 @@ def build_dictionaryNN (clf, avg_shap):
     return dictionary
 
 def build_dictionary(clf, avg_shap):
-    #preprocessing(clf, avg_shap)
-    print("funzione")
     dictionary = defaultdict(list)
     
     for i, estimator in enumerate(clf.estimators_):
         dictionary[avg_shap[i]].append(estimator)
     return dictionary
+
+
+def displayModelInformation(avg_shapley, clf):
+    dictionary = build_dictionary(clf, avg_shapley)
+    sort_avg_shapley = np.sort(avg_shapley)[::-1]
+    plt.plot(sort_avg_shapley)
+    plt.show()
+
+    trees = get_trees(dictionary, sort_avg_shapley)
+    scores = building_ensamble(trees, X_test, y_test)
+    plt.plot(scores)
+    plt.ylabel("accuracy")
+    plt.xlabel("n ensamble")
+    ax = plt.gca()
+    plt.show()
 # W = np.array([[0.99, 0.01, 0.29843549, 0.15379455, 0.51862131, 0.34891333,
 #   0.1075523  ,0.77481699 ,0.27726541 ,0.88820124 ,0.43517843 ,0.49584311,
 #   0.97304657 ,0.54722007 ,0.87338943 ,0.37438674 ,0.15430086 ,0.90116497,
@@ -89,34 +101,23 @@ def build_dictionary(clf, avg_shap):
 #   0.30734203 ,0.64452474 ,0.56254204 ,0.65260114 ,0.63892126 ,0.13173215,
 #   0.41435691 ,0.41736315 ,0.13721167 ,0.46936669]])
 
+
+#Compute random forest shapley values
 X_train, y_train, X_test, y_test, clf = get_ensamble()
 X_test, shap_x, y_test, shap_y = train_test_split(X_test,y_test, test_size=0.5, random_state=42)
-weights= retrieve_weights(shap_x, shap_y, clf, 'jhjhj')
-# print("lunghezza test",len(shap_x))
-# print("lunghezza ensamble",len(clf.estimators_))
-# print("weight 0 ", len(weights))
-# print("weight 1 ",len(weights[1]))
+weights= retrieve_weights(shap_x, shap_y, clf, 'random_forest')
+
 shapley, solver = compute_shap(weights)
 avg_shapley = solver.get_average_shapley()
-dictionary = build_dictionary(clf, avg_shapley)
-sort_avg_shapley = np.sort(avg_shapley)[::-1]
-print(sort_avg_shapley)
-plt.plot(sort_avg_shapley)
-plt.show()
 
-trees = get_trees(dictionary, sort_avg_shapley)
-scores = building_ensamble(trees, X_test, y_test)
-plt.plot(scores)
-plt.ylabel("accuracy")
-plt.xlabel("n ensamble")
-ax = plt.gca()
-plt.show()
+#For each ensamble model display its shapley value and its performance
+displayModelInformation(avg_shapley, clf, X_test, y_test)
 
 #neural network complexity
 X_train, y_train, X_test, y_test, clf = ensamble_neural_network()
 weights = retrieve_weights(X_test, y_test, clf, 'neural')
-print("lunghezza test",len(X_test))
-print("lunghezza ensamble",len(clf.estimators_))
+print("length test",len(X_test))
+print("length ensamble",len(clf.estimators_))
 print("weight 0 ", len(weights))
 print("weight 1 ",len(weights[1]))
 shapley, solver = compute_shap(weights)
@@ -129,22 +130,6 @@ plt.boxplot(data)
 plt.xticks(range(1, len(labels) + 1), labels)
 plt.show()
 
-# solver.solve_game(W_noise, q)
-# shapley_values_noise = solver.get_solution()
-# avg_shapley_noise = solver.get_average_shapley()
-# sort_avg_shapley_noise = np.sort(avg_shapley_noise)[::-1]
-
-# plt.plot(sort_avg_shapley_noise)
-
-
-# avg_shapley = solver.get_average_shapley()
-# print(avg_shapley)
-
-#print("shapley values ordinati:", np.sort(shapley_values,axis=1))
-
-
-
-# 
 
 
 
