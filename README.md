@@ -24,4 +24,6 @@ We have performed the ensemble building operation by constructing M' in a forwar
 As we can see in the above figure, the ensemble score tends to increase up to a certain number of sub-trees (80) and then it decreases. This is due to the fact that in the tail of the list $T$ we have trees with low shapley values and so they haven't got importance in the classification process or, they can misclassify some samples.
 
 # Conclusion
-the computation of the shapley values are useful in many different ways: starting from the mere interpretability of a machine learning model to the enhancing of its performance (ensemble building, feature analysis).
+the computation of the shapley values are useful in many different ways: starting from the mere interpretability of a machine learning model to the enhancing of its performance (ensemble building, feature analysis). 
+
+Full article: [Shapley values article](results/game_theory-2.pdf)
